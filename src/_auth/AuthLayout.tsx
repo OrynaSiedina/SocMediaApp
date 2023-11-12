@@ -1,22 +1,18 @@
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate } from 'react-router-dom';
+import { useUserContext } from '@/context/AuthContext.tsx';
 
 const AuthLayout = () => {
-  const isAuth = false;
-
+  const { isAuthenticated } = useUserContext();
   return (
     <>
-      {isAuth ? (
-        <Navigate to="/" />
+      {isAuthenticated ? (
+        <Navigate to='/' />
       ) : (
         <>
-          <section className="flex flex-1 justify-center items-center flex-col py-10">
+          <section className='flex flex-1 justify-center items-center flex-col px-5 pt-2'>
             <Outlet />
           </section>
-          <img src="/assets/images/side-image.svg" 
-          alt="side-image"
-          className="hidden xl:block h-screen w-1/2 object-cover bg-no-repeat"
-          />
-
+          <div className='min-h-screen hidden xl:block w-1/2 bg-cover bg-[url("/assets/images/side-image.svg")] bg-no-repeat' />
         </>
       )}
     </>

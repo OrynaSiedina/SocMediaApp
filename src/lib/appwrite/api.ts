@@ -1,15 +1,13 @@
 import { INewUser } from '@/types';
-import { ID } from 'appwrite';
-import { account, avatars, databases } from './config';
-import { appwriteConfig } from './config';
-import { Query } from 'appwrite';
+import { ID, Query } from 'appwrite';
+import { account, appwriteConfig, avatars, databases } from './config';
 
 async function checkUserExists(email: string) {
   try {
     const result = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
-      [Query.equal('email', email)]
+      [Query.equal('email', email)],
     );
 
     return result.documents.length > 0;
@@ -28,7 +26,7 @@ export async function createUserAccount(user: INewUser) {
       ID.unique(),
       user.email,
       user.password,
-      user.name
+      user.name,
     );
 
     if (!newAccount) throw new Error('Could not create account');
@@ -57,13 +55,12 @@ export async function saveUserToDB(user: {
   username?: string;
 }) {
   try {
-    const newUser = await databases.createDocument(
+    return await databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
       ID.unique(),
-      user
+      user,
     );
-    return newUser;
   } catch (error) {
     console.log(error);
     throw error;
@@ -72,8 +69,7 @@ export async function saveUserToDB(user: {
 
 export async function signInAccount(user: { email: string; password: string }) {
   try {
-    const session = await account.createEmailSession(user.email, user.password);
-    return session;
+    return await account.createEmailSession(user.email, user.password);
   } catch (error) {
     console.log(error);
     return error;
@@ -89,7 +85,7 @@ export async function getCurrentUser() {
     const currentUser = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
-      [Query.equal('accountId', currentAccount.$id)]
+      [Query.equal('accountId', currentAccount.$id)],
     );
     if (!currentUser) throw new Error('Could not get current user');
 
