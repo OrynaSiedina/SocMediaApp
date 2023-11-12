@@ -4,8 +4,26 @@ import { account, avatars, databases } from './config';
 import { appwriteConfig } from './config';
 import { Query } from 'appwrite';
 
+async function checkUserExists(email: string) {
+  try {
+    const result = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.userCollectionId,
+      [Query.equal('email', email)]
+    );
+
+    return result.documents.length > 0;
+  } catch (error) {
+    console.error('Error checking user existence:', error);
+    return false;
+  }
+}
+
 export async function createUserAccount(user: INewUser) {
   try {
+    const userExists = await checkUserExists(user.email);
+    if (userExists) throw new Error('User with such email already exists');
+
     const newAccount = await account.create(
       ID.unique(),
       user.email,
@@ -18,7 +36,7 @@ export async function createUserAccount(user: INewUser) {
     const avatarUrl = avatars.getInitials(user.name);
 
     const newUser = await saveUserToDB({
-      accountID: newAccount.$id,
+      accountId: newAccount.$id,
       name: newAccount.name,
       email: newAccount.email,
       username: user.username,
@@ -27,12 +45,12 @@ export async function createUserAccount(user: INewUser) {
     return newUser;
   } catch (error) {
     console.log(error);
-    return error;
+    throw error;
   }
 }
 
 export async function saveUserToDB(user: {
-  accountID: string;
+  accountId: string;
   email: string;
   name: string;
   imageUrl: URL;
@@ -48,7 +66,7 @@ export async function saveUserToDB(user: {
     return newUser;
   } catch (error) {
     console.log(error);
-    return error;
+    throw error;
   }
 }
 
@@ -71,11 +89,11 @@ export async function getCurrentUser() {
     const currentUser = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
-      [Query.equal('accountID', currentAccount.$id)]
+      [Query.equal('accountId', currentAccount.$id)]
     );
-      if (!currentUser) throw new Error('Could not get current user');
+    if (!currentUser) throw new Error('Could not get current user');
 
-      return currentUser.documents[0];
+    return currentUser.documents[0];
   } catch (error) {
     console.log(error);
   }
