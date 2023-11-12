@@ -23,7 +23,7 @@ import {
 import { SignupValidation } from '@/lib/validation';
 import { useUserContext } from '@/context/AuthContext';
 
-const SignupForm = () => {
+const SignUpForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { checkAuthUser, isLoading: isUserLoading } = useUserContext();
@@ -178,4 +178,4 @@ const SignupForm = () => {
   );
 };
 
-export default SignupForm;
+export default SignUpForm;
