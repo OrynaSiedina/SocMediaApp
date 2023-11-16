@@ -12,20 +12,20 @@ import {
   UpdateProfile,
 } from './_root/pages';
 import './global.css';
-import { Routes, Route } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 
 const App = () => {
   return (
-    <main className='flex'>
-      <Toaster />
+    <main className='flex h-screen'>
       <Routes>
-        {/*public routes */}
+        {/* public routes */}
         <Route element={<AuthLayout />}>
           <Route path='/sign-in' element={<SigninForm />} />
           <Route path='/sign-up' element={<SignupForm />} />
         </Route>
-        {/*private routes */}
+
+        {/* private routes */}
         <Route element={<RootLayout />}>
           <Route index element={<Home />} />
           <Route path='/explore' element={<Explore />} />
@@ -38,6 +38,8 @@ const App = () => {
           <Route path='/update-profile/:id' element={<UpdateProfile />} />
         </Route>
       </Routes>
+
+      <Toaster />
     </main>
   );
 };

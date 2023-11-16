@@ -1,7 +1,6 @@
 import { INewPost, INewUser } from '@/types';
 import { ID, Query } from 'appwrite';
 import { account, appwriteConfig, avatars, databases, storage } from './config';
-import { useEffect, useState } from 'react';
 
 async function checkUserExists(email: string) {
   try {
@@ -69,9 +68,12 @@ export async function saveUserToDB(user: {
 }
 
 export async function signInAccount(user: { email: string; password: string }) {
-
   try {
-    return await account.createEmailSession(user.email, user.password);
+    const session = await account.createEmailSession(user.email, user.password);
+    if (session) {
+      localStorage.setItem('sessionToken', session.providerAccessToken);
+    }
+    return session;
   } catch (error) {
     console.error(error);
     return error;
@@ -100,34 +102,12 @@ export async function getCurrentUser() {
 export async function signOutAccount() {
   try {
     const response = await account.deleteSession('current');
-    localStorage.removeItem('fallbackCookie');
+    localStorage.removeItem('sessionToken');
     return response;
   } catch (error) {
     console.log(error);
   }
 }
-
-
-export const useAuthenticationStatus = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        setIsAuthenticated(!!currentUser); // Set isAuthenticated based on whether a user exists
-      } catch (error) {
-        console.error(error);
-        setIsAuthenticated(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  return isAuthenticated;
-};
-
 
 export async function createPost(post: INewPost) {
   try {
