@@ -16,17 +16,23 @@ import FileUploader from '@/components/shared/FileUploader.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { PostValidation } from '@/lib/validation';
 import { Models } from 'appwrite';
-import { useCreatePost } from '@/lib/react-query/quariesAndMutations.ts';
+import {
+  useCreatePost,
+  useUpdatePost,
+} from '@/lib/react-query/quariesAndMutations.ts';
 import { useUserContext } from '@/context/AuthContext.tsx';
 import { useToast } from '@/components/ui/use-toast';
 
 type PostFormProps = {
   post?: Models.Document;
+  action?: 'update' | 'create';
 };
 
-const PostForm = ({ post }: PostFormProps) => {
-  const { mutateAsync: createPost } =
-    useCreatePost();
+const PostForm = ({ post, action }: PostFormProps) => {
+  const { mutateAsync: createPost,isPending: isCreating } = useCreatePost();
+  const { mutateAsync: updatePost, isPending: isUpdating } = useUpdatePost();
+  /*const { mutateAsync: deletePost, isPending: isDeleting } = useDeletePost();*/
+
   const { user } = useUserContext();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -43,6 +49,19 @@ const PostForm = ({ post }: PostFormProps) => {
 
   async function onSubmit(values: z.infer<typeof PostValidation>) {
     try {
+      if (post && action === 'update') {
+        const updatedPost = await updatePost({
+          ...values,
+          postId: post.$id,
+          imageId: post?.imageId,
+          imageUrl: post?.imageUrl,
+        });
+        if (!updatedPost) {
+          throw new Error('Post update failed');
+        }
+        return navigate(`/posts/${post.$id}`);
+      }
+
       const newPost = await createPost({
         ...values,
         userId: user.id,
@@ -55,12 +74,13 @@ const PostForm = ({ post }: PostFormProps) => {
       if (error instanceof Error) {
         toast({
           title: (error as Error).message,
-        })
-    } else {
+        });
+      } else {
         console.error(error);
       }
+    }
+  }
 
-  }}
   return (
     <Form {...form}>
       <form
@@ -139,8 +159,10 @@ const PostForm = ({ post }: PostFormProps) => {
           <Button
             type='submit'
             className='shad-button_primary whitespace-nowrap'
+            disabled={isUpdating || isCreating}
           >
-            Post
+            {(isUpdating || isCreating) && 'Loading...'}
+            {action === 'update' ? 'Update' : 'Post'}
           </Button>
         </div>
       </form>

@@ -1,4 +1,4 @@
-import { INewPost, INewUser } from '@/types';
+import { INewPost, INewUser, IUpdatePost } from '@/types';
 import { ID, Query } from 'appwrite';
 import { account, appwriteConfig, avatars, databases, storage } from './config';
 
@@ -243,12 +243,100 @@ export async function savePost(userId: string, postId: string) {
     console.log(error);
   }
 }
+
 export async function deleteSavedPost(savedRecordId: string) {
   try {
     const statusCode = await databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.savesCollectionId,
       savedRecordId
+    );
+
+    if (!statusCode) throw Error;
+
+    return { status: "Ok" };
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function getPostById(postId?: string) {
+  if (!postId) throw Error;
+
+  try {
+    const post = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId
+    );
+
+    if (!post) throw Error;
+
+    return post;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function updatePost(post: IUpdatePost) {
+  try {
+    let image = {
+      imageUrl: post.imageUrl,
+      imageId: post.imageId,
+    };
+
+    if (post.file && post.file.length > 0) {
+      const uploadedFile = await uploadFile(post.file[0]);
+      if (!uploadedFile) throw new Error('File upload failed');
+
+      const fileUrl = getFilePreview(uploadedFile.$id);
+      if (!fileUrl) {
+        await deleteFile(uploadedFile.$id);
+        throw new Error('Failed to get file URL');
+      }
+
+      image = {
+        imageUrl: fileUrl,
+        imageId: uploadedFile.$id,
+      };
+    }
+
+    const tags = post.tags?.split(',').map(tag => tag.trim()) || [];
+
+    const updatedPost = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      post.postId,
+      {
+        caption: post.caption,
+        imageUrl: image.imageUrl,
+        imageId: image.imageId,
+        location: post.location,
+        tags,
+      },
+    );
+
+    if (!updatedPost) {
+      if (image.imageId !== post.imageId) {
+        await deleteFile(image.imageId);
+      }
+      throw new Error('Post update failed');
+    }
+
+    return updatedPost;
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function deletePost(postId: string, imageId: string) {
+  if (!postId || imageId) throw Error;
+  try {
+    const statusCode = await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId
     );
 
     if (!statusCode) throw Error;
