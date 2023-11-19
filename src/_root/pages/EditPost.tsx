@@ -1,11 +1,11 @@
 import PostForm from '@/components/PostForm.tsx';
 import { useParams } from 'react-router-dom';
-import { useGetPostByID } from '@/lib/react-query/quariesAndMutations.ts';
+import { useGetPostById } from '@/lib/react-query/quariesAndMutations.ts';
 import { Loader } from 'lucide-react';
 
 const CreatePost = () => {
   const { id } = useParams();
-  const { data: post, isPending } = useGetPostByID(id || '');
+  const { data: post, isPending } = useGetPostById(id || '');
 
   if (isPending) return <Loader />;
 
